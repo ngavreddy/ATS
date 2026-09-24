@@ -1,0 +1,11 @@
+# Netlify reads this file automatically on every deploy.
+# The tests run first: if any test fails, the deploy is blocked and the previous version stays live.
+[build]
+  command = "npm test && npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # These values are public by design (Next.js puts them in the browser bundle), so Netlify's
+  # secret scanner must not fail the build over them. Real secrets (SUPABASE_SECRET_KEY,
+  # RESEND_API_KEY, ANTHROPIC_API_KEY, CRON_SECRET) stay protected by the scanner.
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,APP_URL,APP_TIMEZONE,CLAUDE_MODEL,EMAIL_FROM"
