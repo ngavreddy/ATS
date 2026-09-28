@@ -25,8 +25,8 @@ insert into reqs (id, agency_id, client_id, hiring_manager_id, title, pay_min, p
   ('e0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-00000000000a', 'c0000000-0000-0000-0000-00000000000a',
    null, 'Platform Engineer', 160000, 185000, 'Medical', 'live',
    '[{"name":"Submitted"},{"name":"Interview 1","scorecard":true}]');
-insert into candidates (id, agency_id, full_name) values
-  ('d0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-00000000000a', 'Priya Raman');
+insert into candidates (id, agency_id, first_name, last_name, city, state) values
+  ('d0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-00000000000a', 'Priya', 'Raman', 'Chicago', 'IL');
 
 -- ── The gate ────────────────────────────────────────────
 select throws_ok(

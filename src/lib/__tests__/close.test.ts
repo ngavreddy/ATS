@@ -52,6 +52,12 @@ describe('closeSubmission (required closure)', () => {
     expect(Date.parse(update.disposition_sent_at)).not.toBeNaN() // the DB constraint requires this
     expect(db.calls.find((c) => c.table === 'notes')!.payload.kind).toBe('email')
   })
+  it('greets the candidate by their preferred name', async () => {
+    const db = fakeDb()
+    const withPreferred = { ...sub('k@example.com'), candidates: { full_name: 'Kenji Watanabe', first_name: 'Kenji', preferred_name: 'Ken', email: 'k@example.com' } }
+    await closeSubmission(db as never, withPreferred, 'Platform Engineer', 'Cobalt')
+    expect(db.calls.find((c) => c.table === 'submissions' && c.op === 'update')!.payload.disposition).toContain('Hi Ken,')
+  })
   it('still closes (status tracker carries the message) when the candidate has no email', async () => {
     const db = fakeDb()
     await closeSubmission(db as never, sub(null), 'Platform Engineer', 'Cobalt')

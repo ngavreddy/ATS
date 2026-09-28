@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { locationLabel } from '@/lib/names'
 import { hashToken } from '@/lib/links'
 import { assessmentSummary, LEVELS, STATUS_LABEL, type Criterion, type Ratings } from '@/lib/criteria'
 import { approveCriteria, decide, requestCriteriaChanges, submitScorecard } from './actions'
@@ -27,7 +28,7 @@ export default async function FeedbackPage({ params, searchParams }: {
       .select('id, stage_name, req_criteria_sets(criteria), submissions!inner(status, stage_name, candidates(full_name, headline), reqs(title))')
       .eq('contact_id', cid).is('submitted_at', null).eq('submissions.status', 'active'),
     admin.from('submissions')
-      .select('id, stage_index, stage_name, candidates(full_name, headline, metro), reqs!inner(title, hiring_manager_id, workflow), submission_assessments(ratings, req_criteria_sets(criteria))')
+      .select('id, stage_index, stage_name, candidates(full_name, headline, metro, city, state), reqs!inner(title, hiring_manager_id, workflow), submission_assessments(ratings, req_criteria_sets(criteria))')
       .eq('status', 'active').eq('reqs.hiring_manager_id', cid).order('created_at'),
   ])
   const openCards = (cards ?? []).filter((c: any) => c.stage_name === one(c.submissions).stage_name)
@@ -113,7 +114,7 @@ export default async function FeedbackPage({ params, searchParams }: {
         return (
           <div key={s.id} className="card space-y-4 p-5">
             <div><div className="text-lg font-medium">{cand.full_name}</div>
-              <div className="text-sm text-muted">{cand.headline} · {cand.metro}</div>
+              <div className="text-sm text-muted">{[cand.headline, locationLabel(cand)].filter(Boolean).join(' · ')}</div>
               <div className="mt-1 text-sm">For {one(s.reqs).title} · {s.stage_name}</div></div>
             {criteria.length > 0 && (
               <div>

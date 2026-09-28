@@ -1,10 +1,11 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { greetingName } from '@/lib/names'
 
 export default async function Status({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
   if (!/^[0-9a-f-]{36}$/.test(token)) return <p className="p-10">Not found.</p>
   const admin = supabaseAdmin()
-  const { data: c } = await admin.from('candidates').select('id, full_name').eq('status_token', token).maybeSingle()
+  const { data: c } = await admin.from('candidates').select('id, full_name, first_name, preferred_name').eq('status_token', token).maybeSingle()
   if (!c) return <p className="p-10">Not found.</p>
 
   const { data: subs } = await admin.from('submissions')
@@ -13,7 +14,7 @@ export default async function Status({ params }: { params: Promise<{ token: stri
 
   return (
     <div className="mx-auto max-w-md space-y-5 p-5">
-      <div><p className="text-sm text-muted">Hi {c.full_name.split(' ')[0]},</p>
+      <div><p className="text-sm text-muted">Hi {greetingName(c)},</p>
         <h1 className="text-3xl">Here's where you stand</h1>
         <p className="mt-1 text-sm text-muted">Every role shows its stage and when you'll hear back next.</p></div>
       {subs?.map((s: any) => (

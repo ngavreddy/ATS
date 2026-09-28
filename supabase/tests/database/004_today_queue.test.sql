@@ -28,8 +28,8 @@ insert into req_criteria_sets (agency_id, req_id, version, status, criteria, app
    '[{"id":"11111111-1111-1111-1111-111111111111","name":"Spark at scale","kind":"must","weight":3,"definition":"Ran production Spark jobs"}]',
    'ca000000-0000-0000-0000-000000000001', now());
 
-insert into candidates (id, agency_id, full_name)
-select ('d0000000-0000-0000-0000-00000000000' || i)::uuid, 'a0000000-0000-0000-0000-00000000000a', 'Cand ' || i
+insert into candidates (id, agency_id, first_name, last_name, city, state)
+select ('d0000000-0000-0000-0000-00000000000' || i)::uuid, 'a0000000-0000-0000-0000-00000000000a', 'Cand', i::text, 'Chicago', 'IL'
 from generate_series(1, 8) i;
 
 -- (candidate, stage_index, stage_name, entered, next_touch_at, status)

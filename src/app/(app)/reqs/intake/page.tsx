@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import { supabaseServer } from '@/lib/supabase/server'
 import { draftReqFromTranscript, MODEL } from '@/lib/claude'
+import { DEFAULT_STAGES } from '@/lib/workflow'
+import { defaultManager, hiringManagersFor } from '@/lib/contacts'
 
 async function intake(fd: FormData) {
   'use server'
@@ -12,14 +14,15 @@ async function intake(fd: FormData) {
   catch { redirect('/reqs/intake?error=' + encodeURIComponent('Claude could not produce a valid draft. Try again or shorten the transcript.')) }
 
   const clientId = String(fd.get('client_id'))
-  const { data: tpl } = await sb.from('workflow_templates').select('stages').eq('client_id', clientId).limit(1).single()
+  const { data: tpl } = await sb.from('workflow_templates').select('stages').eq('client_id', clientId).limit(1).maybeSingle()
+  const { data: people } = await sb.from('contacts').select('id, client_id, name, role, is_primary, status').eq('client_id', clientId)
 
   // Always a DRAFT. A person reviews it and publishes it.
   const { data: req, error } = await sb.from('reqs').insert({
-    client_id: clientId, title: d.title, location: d.location, work_model: d.work_model,
+    client_id: clientId, hiring_manager_id: defaultManager(hiringManagersFor(people ?? [], clientId)) || null, title: d.title, location: d.location, work_model: d.work_model,
     pay_min: d.pay_min, pay_max: d.pay_max, benefits_summary: d.benefits_summary,
     must_haves: d.must_haves, brief: transcript, job_description: d.job_description, sourcing_string: d.sourcing_string,
-    workflow: tpl?.stages ?? [], status: 'draft',
+    workflow: tpl?.stages ?? DEFAULT_STAGES, status: 'draft',
   }).select('id').single()
   if (error) redirect('/reqs/intake?error=' + encodeURIComponent(error.message))
 

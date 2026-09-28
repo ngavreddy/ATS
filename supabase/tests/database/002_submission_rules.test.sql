@@ -21,10 +21,10 @@ select 'a0000000-0000-0000-0000-00000000000a', id, 1, 'approved',
        'ca000000-0000-0000-0000-000000000001', now()
 from reqs;
 
-insert into candidates (id, agency_id, full_name) values
-  ('d0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-00000000000a', 'Priya Raman'),
-  ('d0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-00000000000a', 'Kenji Watanabe'),
-  ('d0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-00000000000a', 'Samir Haddad');
+insert into candidates (id, agency_id, first_name, last_name, city, state) values
+  ('d0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-00000000000a', 'Priya', 'Raman', 'Chicago', 'IL'),
+  ('d0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-00000000000a', 'Kenji', 'Watanabe', 'Chicago', 'IL'),
+  ('d0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-00000000000a', 'Samir', 'Haddad', 'Chicago', 'IL');
 
 insert into submissions (id, agency_id, candidate_id, req_id, stage_name, candidate_consent_at, nudge_count, stage_entered_at) values
   ('50000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-00000000000a',

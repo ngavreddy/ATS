@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { supabaseServer } from '@/lib/supabase/server'
 import { fit } from '@/lib/filters'
+import { greetingName } from '@/lib/names'
+import { prefsOf } from '@/lib/candidate'
 import { fmt } from '@/lib/dates'
 import { STATUS_LABEL, STATUSES, type Criterion } from '@/lib/criteria'
 import { submitCandidate } from '../../../actions'
@@ -15,8 +17,8 @@ export default async function SubmitPage({ params, searchParams }: {
   const { data: req } = await sb.from('reqs').select('*, clients(name)').eq('id', reqId).single()
   const { data: set } = await sb.from('req_criteria_sets').select('id, version, criteria').eq('req_id', reqId).eq('status', 'approved').maybeSingle()
   const { data: prior } = await sb.from('submissions').select('introduced_at, reqs!inner(client_id)').eq('candidate_id', id).eq('reqs.client_id', req.client_id).limit(1)
-  const f = fit(c.prefs ?? {}, req)
-  const first = c.full_name.split(' ')[0]
+  const f = fit(prefsOf(c), req)
+  const first = greetingName(c)
 
   if (!set || !f.ok) {
     return (

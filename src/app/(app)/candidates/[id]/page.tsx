@@ -3,6 +3,9 @@ import { supabaseServer } from '@/lib/supabase/server'
 import { fit } from '@/lib/filters'
 import { fmt } from '@/lib/dates'
 import { addNote } from '../actions'
+import { greetingName, locationLabel } from '@/lib/names'
+import { prefsOf, NOTICE_PERIODS, WORK_AUTH } from '@/lib/candidate'
+import { SOURCE_LABEL } from '@/lib/search'
 
 export default async function CandidatePage({ params, searchParams }: {
   params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; scope?: string }>
@@ -25,7 +28,10 @@ export default async function CandidatePage({ params, searchParams }: {
   const { data: approvedSets } = await sb.from('req_criteria_sets').select('req_id').eq('status', 'approved')
   const approvedReqIds = new Set(approvedSets?.map((x: any) => x.req_id))
 
-  const p = c.prefs ?? {}
+  const p = prefsOf(c)
+  const label = (list: [string, string][], v: string | null) => list.find(([k]) => k === v)?.[1]
+  let resumeUrl: string | null = null
+  if (c.resume_path) resumeUrl = (await sb.storage.from('resumes').createSignedUrl(c.resume_path, 300)).data?.signedUrl ?? null
   const submittedReqIds = new Set(subs?.map((s) => s.reqs.id))
 
   return (
@@ -33,9 +39,16 @@ export default async function CandidatePage({ params, searchParams }: {
       <div className="space-y-6">
         <div>
           <Link href="/candidates" className="text-sm text-muted">Candidates /</Link>
-          <h1>{c.full_name}</h1>
-          <p className="text-muted">{c.headline} · {c.metro}</p>
+          <div className="flex items-start justify-between">
+            <div><h1>{c.full_name}{c.preferred_name && <span className="ml-2 text-2xl text-muted">“{c.preferred_name}”</span>}</h1>
+              <p className="text-muted">{[c.headline, locationLabel(c)].filter(Boolean).join(' · ')}</p></div>
+            <Link href={`/candidates/${id}/edit`} className="btn">Edit</Link>
+          </div>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
+            {resumeUrl && <a className="chip" href={resumeUrl} target="_blank" rel="noreferrer">Resume: {c.resume_filename ?? 'download'}</a>}
+            {c.email && <a className="chip" href={`mailto:${c.email}`}>{c.email}</a>}
+            {c.phone && <a className="chip" href={`tel:${c.phone}`}>{c.phone}</a>}
+            {c.linkedin_url && <a className="chip" href={c.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
             {c.open_to_match && <span className="chip">Open to be matched</span>}
             <a className="chip" href={`/status/${c.status_token}`} target="_blank">Candidate status page</a>
           </div>
@@ -63,8 +76,23 @@ export default async function CandidatePage({ params, searchParams }: {
           <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Hard filters</h2>
           <dl className="grid grid-cols-3 gap-4 text-sm">
             <div><dt className="text-muted">Comp floor</dt><dd>{p.comp_floor ? `$${p.comp_floor / 1000}k base` : '—'}</dd></div>
-            <div><dt className="text-muted">Work model</dt><dd>{p.work_models?.join(', ') || '—'}</dd></div>
+            <div><dt className="text-muted">Work model</dt><dd className="capitalize">{p.work_models?.join(', ') || '—'}</dd></div>
             <div><dt className="text-muted">Dealbreakers</dt><dd>{p.dealbreakers?.join(', ') || '—'}</dd></div>
+          </dl>
+        </section>
+
+        <section className="card p-5">
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-wide text-muted">Profile</h2>
+          <dl className="grid grid-cols-3 gap-4 text-sm">
+            <div><dt className="text-muted">Current role</dt><dd>{[c.current_title, c.current_employer].filter(Boolean).join(' at ') || '—'}</dd></div>
+            <div><dt className="text-muted">Experience</dt><dd>{c.years_experience !== null && c.years_experience !== undefined ? `${c.years_experience} years` : '—'}</dd></div>
+            <div><dt className="text-muted">Notice period</dt><dd>{label(NOTICE_PERIODS, c.notice_period) ?? '—'}</dd></div>
+            <div><dt className="text-muted">Relocation</dt><dd>{c.willing_to_relocate ? 'Willing to relocate' : 'Not relocating'}</dd></div>
+            <div><dt className="text-muted">Work authorization</dt><dd>{label(WORK_AUTH, c.work_authorization) ?? '—'}</dd></div>
+            <div><dt className="text-muted">Source</dt><dd>{c.source ? `${SOURCE_LABEL[c.source] ?? c.source}${c.referred_by ? ` · ${c.referred_by}` : ''}` : '—'}</dd></div>
+            <div className="col-span-3"><dt className="text-muted">Skills</dt><dd className="flex flex-wrap gap-1.5 pt-1">{c.skills?.length ? c.skills.map((x: string) => <span key={x} className="chip">{x}</span>) : '—'}</dd></div>
+            <div className="col-span-3"><dt className="text-muted">Target titles</dt><dd>{c.target_titles?.join(', ') || '—'}</dd></div>
+            {(c.address_line || c.postal_code) && <div className="col-span-3"><dt className="text-muted">Address (records only, never used for matching)</dt><dd>{[c.address_line, [c.city, c.state].filter(Boolean).join(', '), c.postal_code].filter(Boolean).join(', ')}</dd></div>}
           </dl>
         </section>
 
@@ -81,7 +109,7 @@ export default async function CandidatePage({ params, searchParams }: {
                 <div className="flex-1">
                   <div className="font-medium">{r.title}</div>
                   <div className="text-sm text-muted">{r.clients.name} · ${r.pay_min / 1000}–{r.pay_max / 1000}k</div>
-                  {known && !already && <div className="mt-1 text-xs text-blue-800">{r.clients.name} already knows {c.full_name.split(' ')[0]}: introduced {fmt(known.introduced_at)}. Covered by the non-circumvention term.</div>}
+                  {known && !already && <div className="mt-1 text-xs text-blue-800">{r.clients.name} already knows {greetingName(c)}: introduced {fmt(known.introduced_at)}. Covered by the non-circumvention term.</div>}
                 </div>
                 {blocked ? <span className="chip">{blocked}</span> : <Link href={`/candidates/${id}/submit/${r.id}`} className="btn-dark">Assess &amp; submit</Link>}
               </div>

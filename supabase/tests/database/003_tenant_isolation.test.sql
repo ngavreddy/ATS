@@ -14,8 +14,8 @@ insert into members (agency_id, user_id, role) values
 insert into clients (id, agency_id, name) values
   ('c0000000-0000-0000-0000-00000000000a', 'a0000000-0000-0000-0000-00000000000a', 'A client'),
   ('c0000000-0000-0000-0000-00000000000b', 'b0000000-0000-0000-0000-00000000000b', 'B client');
-insert into candidates (agency_id, full_name) values
-  ('b0000000-0000-0000-0000-00000000000b', 'B secret candidate');
+insert into candidates (agency_id, first_name, last_name, city, state) values
+  ('b0000000-0000-0000-0000-00000000000b', 'B', 'Secret', 'Chicago', 'IL');
 
 set local role authenticated;
 set local request.jwt.claim.sub = 'aaaaaaaa-0000-0000-0000-000000000001';

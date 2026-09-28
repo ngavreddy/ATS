@@ -31,6 +31,7 @@ export default async function ReqDetail({ params, searchParams }: {
           <p className="mt-1 text-muted">{r.clients.name} · {r.contacts?.name} · {r.pay_min ? `$${r.pay_min / 1000}–${r.pay_max / 1000}k` : 'No pay range yet'}</p>
         </div>
         <div className="flex gap-2">
+          {['draft', 'live', 'on_hold'].includes(r.status) && <Link href={`/reqs/${id}/edit`} className="btn">Edit</Link>}
           {r.status === 'draft' && <form action={publishReq.bind(null, id)}><button className="btn-dark">Publish</button></form>}
           {r.status !== 'closed' && r.status !== 'draft' && <Link href={`/reqs/${id}/close`} className="btn">Close req</Link>}
         </div>

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { sendEmail, esc } from './email'
+import { greetingName } from './names'
 
 export function dispositionMessage(stageIndex: number, first: string, client: string, title: string) {
   if (stageIndex >= 2)
@@ -11,7 +12,7 @@ export function dispositionMessage(stageIndex: number, first: string, client: st
 
 // s: { id, candidate_id, stage_index, candidates: { full_name, email } }
 export async function closeSubmission(sb: SupabaseClient, s: any, title: string, client: string) {
-  const body = dispositionMessage(s.stage_index, s.candidates.full_name.split(' ')[0], client, title)
+  const body = dispositionMessage(s.stage_index, greetingName(s.candidates), client, title)
   if (s.candidates.email) {
     try {
       await sendEmail(s.candidates.email, `Update on the ${title} role`, `<p>${esc(body).replace(/\n/g, '<br>')}</p>`)

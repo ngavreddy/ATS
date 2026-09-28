@@ -12,6 +12,11 @@ describe('loginHint', () => {
     for (const m of ['Invalid API key', 'invalid JWT: unable to parse', "Your project's URL and Key are required to create a Supabase client!", 'fetch failed'])
       expect(loginHint(m)).toContain('Netlify')
   })
+  it('recognises a Project URL with a path on the end, and says exactly what it should look like', () => {
+    const h = loginHint('Invalid path specified in request URL')
+    expect(h).toContain('nothing after it')
+    expect(h).toContain('/rest/v1')
+  })
   it('is case-insensitive', () => expect(loginHint('EMAIL NOT CONFIRMED')).not.toBeNull())
   it('gives no hint for unknown errors, so the raw message speaks for itself', () => {
     expect(loginHint('Something odd')).toBeNull()
